@@ -23,9 +23,8 @@ exports.angajatDupaFunctie = (req, res) => {
 exports.serveImage = (req, res) => {
     try {
         const numeImagine = '/src/database/img/' +  req.params.img;
-        res.sendFile(__dirname + numeImagine);
+        res.sendFile(__dirname + numeImagine);   
         
-        res.sendFile(imagePath);
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -45,13 +44,10 @@ exports.totiAngajatii = (req, res) => {
 
 //Configurare multer disk storage
 const storage = multer.diskStorage({
-    
-    //Destinatia in care vor fi stocate fisierele incarcate
-    destination: 'src/public/uploads',
+    destination: 'src/database/img',
     filename: (req, file, callback) => {
-        console.log('req.body:', req.body);
         const { nume, functie } = req.body;
-        const fileName = `${nume.toUpperCase()}_${functie.toUpperCase()}.jpg`;
+        const fileName = `${(nume || '').toUpperCase()}_${(functie || '').toUpperCase()}.jpg`;
         callback(null, fileName);
     },
 });
@@ -73,24 +69,40 @@ const upload = multer({
 
 //Adauga angajati
 exports.addAngajati = (req, res) => {
-    try {
-        const { nume, specialitate, functie } = req.body;
-        const imgPath = req.file ? req.file.path : null;
 
-        if (!imgPath) {
-            return res.status(400).json({ success: false, message: 'Nu este furnizat niciun fișier imagine' });
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({ success: false, message: err.message });
         }
-        console.log(nume, specialitate, functie);
-  
-        const query = 'INSERT INTO angajati (nume, specialitate, img, functie) VALUES (?, ?, ?, ?)';
-        const statement = db.prepare(query);
-        const result = statement.run(nume, specialitate, imgPath.replace('public/', ''), functie);
-  
-        res.json({ success: true, insertedId: result.lastInsertRowid });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-}
+
+        try {
+            const { nume, specialitate, functie } = req.body;
+
+            if (!nume || !specialitate || !functie) {
+                return res.status(400).json({ success: false, message: 'Toate campurile sunt obligatorii' });
+            }
+
+            const imgPath = req.file ? req.file.filename : null;
+
+            if (!imgPath) {
+                return res.status(400).json({ success: false, message: 'Nu este furnizat niciun fisier imagine' });
+            }
+
+            const query = 'INSERT INTO angajati (nume, specialitate, img, functie) VALUES (?, ?, ?, ?)';
+            const statement = db.prepare(query);
+
+            const result = statement.run(nume, specialitate, imgPath, functie);
+
+            if (result.changes > 0) {
+                res.json({ success: true, insertedId: result.lastInsertRowid });
+            } else {
+                res.status(500).json({ success: false, message: 'Nu s-au putut introduce date in baza de date' });
+            }
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+};
 
 //Editeaza detalii angajat
 exports.editAngajati = (req, res) => {
