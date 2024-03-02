@@ -157,20 +157,22 @@ exports.editAngajati = (req, res) => {
 //Sterge angajat
 exports.deleteAngajati = (req, res) => {
     const id = req.params.id;
-  
+
     try {
         const selectStmt = db.prepare('SELECT img FROM angajati WHERE id=?');
-        const imgPath = path.join(__dirname, 'src', 'public', selectStmt.get(id)?.img);
-  
-        if (!imgPath) {
+        const selectedEmployee = selectStmt.get(id);
+
+        if (!selectedEmployee) {
             return res.status(404).json({ error: 'Angajatul nu a fost gasit' });
         }
-  
+
+        const imgPath = path.join(__dirname, '..', 'database', 'img', selectedEmployee.img);
+
         const deleteStmt = db.prepare('DELETE FROM angajati WHERE id=?');
         const result = deleteStmt.run(id);
-  
+
         if (result.changes === 0) {
-            return res.status_404.json({ error: 'Angajatul nu a fost gasit' });
+            return res.status(404).json({ error: 'Angajatul nu a fost gasit' });
         }
 
         try {
@@ -181,7 +183,7 @@ exports.deleteAngajati = (req, res) => {
             console.error(`Eroare la ștergerea fișierului imagine: ${unlinkError.message}`);
             return res.status(500).json({ error: unlinkError.message });
         }
-  
+
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: error.message });
