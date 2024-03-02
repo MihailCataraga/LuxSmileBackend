@@ -31,8 +31,11 @@ app.delete('/delete/:id', angajatiController.deleteAngajati);
 
 app.get('src/database/img/:img', angajatiController.serveImage);
 
+//Arata mesajele
 app.get('/mesaje', angajatiController.fetchMessages);
 
+
+//Read status
 app.post('/mesaje/:id', angajatiController.markAsRead);
 
 
