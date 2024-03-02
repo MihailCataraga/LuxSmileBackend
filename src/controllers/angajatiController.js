@@ -189,3 +189,28 @@ exports.deleteAngajati = (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
+//Arata mesajele
+exports.fetchMessages = (req, res) => {
+    try {
+        const query = 'SELECT * FROM mesaje_primite';
+        const mesaje = db.prepare(query);
+        const results = mesaje.all();
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+//Schimba read status
+exports.markAsRead = (req, res) => {
+    try {
+        const messageId = req.params.id;
+        const updateQuery = 'UPDATE mesaje_primite SET read_status = 1 WHERE id=?';
+        const updateStatement = db.prepare(updateQuery);
+        updateStatement.run(messageId);
+        res.json({ success: true, message: 'Message marked as read successfully.' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};

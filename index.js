@@ -27,9 +27,14 @@ app.post('angajati/add', authMiddleware.verifyToken, angajatiController.addAngaj
 
 app.put('/angajati/edit/:id', authMiddleware.verifyToken, angajatiController.editAngajati);
 
-app.delete('/angajati/delete/:id', authMiddleware.verifyToken, angajatiController.deleteAngajati);
+app.delete('/delete/:id', angajatiController.deleteAngajati);
 
 app.get('src/database/img/:img', angajatiController.serveImage);
+
+app.get('/mesaje', angajatiController.fetchMessages);
+
+app.post('/mesaje/:id', angajatiController.markAsRead);
+
 
 
 const PORT = 8080;
