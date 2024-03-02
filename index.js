@@ -23,7 +23,7 @@ app.post('/login', authController.login);
 
 app.post('/angajati', authMiddleware.verifyToken, angajatiController.totiAngajatii);
 
-app.post('/add', authMiddleware.verifyToken, angajatiController.addAngajati);
+app.post('angajati/add', authMiddleware.verifyToken, angajatiController.addAngajati);
 
 app.put('/angajati/edit/:id', authMiddleware.verifyToken, angajatiController.editAngajati);
 
