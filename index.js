@@ -27,16 +27,16 @@ app.post('angajati/add', authMiddleware.verifyToken, angajatiController.addAngaj
 
 app.put('/angajati/edit/:id', authMiddleware.verifyToken, angajatiController.editAngajati);
 
-app.delete('/delete/:id', angajatiController.deleteAngajati);
+app.delete('/delete/:id', authMiddleware.verifyToken, angajatiController.deleteAngajati);
 
-app.get('src/database/img/:img', angajatiController.serveImage);
+app.get('src/database/img/:img', authMiddleware.verifyToken, angajatiController.serveImage);
 
 //Arata mesajele
-app.get('/mesaje', angajatiController.fetchMessages);
+app.get('/mesaje', authMiddleware.verifyToken, angajatiController.fetchMessages);
 
 
 //Read status
-app.post('/mesaje/:id', angajatiController.markAsRead);
+app.post('/mesaje/:id', authMiddleware.verifyToken, angajatiController.markAsRead);
 
 
 
