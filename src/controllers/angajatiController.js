@@ -49,7 +49,7 @@ const storage = multer.diskStorage({
         const { nume, functie } = req.body;
         const fileName = `${(nume || '').toUpperCase()}_${(functie || '').toUpperCase()}.jpg`;
         callback(null, fileName);
-    },
+    }
 });
 
 //Validare fisiere pentru upload
@@ -109,13 +109,46 @@ exports.editAngajati = (req, res) => {
     try {
         const angajatId = req.params.id;
         const updatedFields = req.body.newData;
-
-        const setClause = Object.keys(updatedFields).map(field => `${field} = :${field}`).join(', ');
-        const query = `UPDATE angajati SET ${setClause} WHERE id = :id`;
-        db.prepare(query).run({ ...updatedFields, id: angajatId });
+        
+        const isNumeUpdated = updatedFields.hasOwnProperty('nume');
+        const isSpecialitateUpdated = updatedFields.hasOwnProperty('specialitate');
+        const isFunctieUpdated = updatedFields.hasOwnProperty('functie');
     
-        res.json({ message: `Campurile au fost actualizate pentru ID ${angajatId}` });
+        if (isNumeUpdated || isFunctieUpdated || isSpecialitateUpdated) {
+            const setClause = Object.keys(updatedFields).map(field => `${field} = :${field}`).join(', ');
+            const query = `UPDATE angajati SET ${setClause} WHERE id = :id`;
+            const result = db.prepare(query).run({ ...updatedFields, id: angajatId });
+    
+            if (isNumeUpdated || isFunctieUpdated) {
+                const angajat = db.prepare('SELECT img, nume, functie FROM angajati WHERE id=?').get(angajatId);
+    
+                if (angajat) {
+                    const basePath = path.join(__dirname, '../database/img/');
+                    const relativeImagePath = path.basename(angajat.img);
+                    const imagePath = path.join(basePath, relativeImagePath);
+                    
+                    if (fs.existsSync(imagePath)) {
+                        const nume = (isNumeUpdated ? updatedFields.nume : angajat.nume || '').toUpperCase();
+                        const functie = (isFunctieUpdated ? updatedFields.functie : angajat.functie || '').toUpperCase();
+                        
+                        const newImageName = `${nume}_${functie}.jpg`;
+                        const newImagePath = path.join(basePath, newImageName);
 
+                        fs.renameSync(imagePath, newImagePath);
+                        db.prepare('UPDATE angajati SET img=? WHERE id=?').run(newImageName, angajatId);
+                    } else {
+                        console.error('Imaginea nu exista', imagePath);
+                    }
+                } else {
+                    console.error({ error: error.message });
+                }
+            }
+    
+            res.json({ message: `Campurile au fost actualizate pentru ID ${angajatId}` });
+        } else {
+            res.status(400).json({ success: false, error: error.message });
+        }
+    
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
