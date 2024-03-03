@@ -1,4 +1,3 @@
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('../database/db');
@@ -22,9 +21,9 @@ exports.angajatDupaFunctie = (req, res) => {
 //Preluarea pozei
 exports.serveImage = (req, res) => {
     try {
-        const numeImagine = '/src/database/img/' +  req.params.img;
-        res.sendFile(__dirname + numeImagine);   
-        
+        const numeImagine = '/src/database/img/' + req.params.img;
+        res.sendFile(__dirname + numeImagine);
+
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -42,66 +41,35 @@ exports.totiAngajatii = (req, res) => {
     }
 };
 
-//Configurare multer disk storage
-const storage = multer.diskStorage({
-    destination: 'src/database/img',
-    filename: (req, file, callback) => {
-        const { nume, functie } = req.body;
-        const fileName = `${(nume || '').toUpperCase()}_${(functie || '').toUpperCase()}.jpg`;
-        callback(null, fileName);
-    }
-});
-
-//Validare fisiere pentru upload
-const fileFilter = (req, file, callback) => {
-    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg') {
-        callback(null, true);
-    } else {
-        callback(new Error('Sunt permise doar fișiere JPG'), false);
-    }
-};
-
-//Config multer pentru file upload
-const upload = multer({
-    storage,
-    fileFilter,
-});
+//Add Img
+exports.addImg = (req, res) => {
+    res.json({ message: 'Imagine încărcată cu succes' });
+}
 
 //Adauga angajati
 exports.addAngajati = (req, res) => {
+    try {
+        const { nume, specialitate, functie } = req.body;
 
-    upload.single('file')(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ success: false, message: err.message });
+        if (!nume || !specialitate || !functie) {
+            return res.status(400).json({ success: false, message: 'Toate campurile sunt obligatorii' });
         }
 
-        try {
-            const { nume, specialitate, functie } = req.body;
+        const imgPath = specialitate.toUpperCase() + ' ' + nume.toUpperCase() + '_' + functie + '.jpg';
 
-            if (!nume || !specialitate || !functie) {
-                return res.status(400).json({ success: false, message: 'Toate campurile sunt obligatorii' });
-            }
+        const query = 'INSERT INTO angajati (nume, specialitate, img, functie) VALUES (?, ?, ?, ?)';
+        const statement = db.prepare(query);
 
-            const imgPath = req.file ? req.file.filename : null;
+        const result = statement.run(nume, specialitate, imgPath, functie);
 
-            if (!imgPath) {
-                return res.status(400).json({ success: false, message: 'Nu este furnizat niciun fisier imagine' });
-            }
-
-            const query = 'INSERT INTO angajati (nume, specialitate, img, functie) VALUES (?, ?, ?, ?)';
-            const statement = db.prepare(query);
-
-            const result = statement.run(nume, specialitate, imgPath, functie);
-
-            if (result.changes > 0) {
-                res.json({ success: true, insertedId: result.lastInsertRowid });
-            } else {
-                res.status(500).json({ success: false, message: 'Nu s-au putut introduce date in baza de date' });
-            }
-        } catch (error) {
-            res.status(500).json({ success: false, error: error.message });
+        if (result.changes > 0) {
+            res.json({ success: true, insertedId: result.lastInsertRowid });
+        } else {
+            res.status(500).json({ success: false, message: 'Nu s-au putut introduce date in baza de date' });
         }
-    });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
 };
 
 //Editeaza detalii angajat
@@ -109,28 +77,28 @@ exports.editAngajati = (req, res) => {
     try {
         const angajatId = req.params.id;
         const updatedFields = req.body.newData;
-        
+
         const isNumeUpdated = updatedFields.hasOwnProperty('nume');
         const isSpecialitateUpdated = updatedFields.hasOwnProperty('specialitate');
         const isFunctieUpdated = updatedFields.hasOwnProperty('functie');
-    
+
         if (isNumeUpdated || isFunctieUpdated || isSpecialitateUpdated) {
             const setClause = Object.keys(updatedFields).map(field => `${field} = :${field}`).join(', ');
             const query = `UPDATE angajati SET ${setClause} WHERE id = :id`;
             const result = db.prepare(query).run({ ...updatedFields, id: angajatId });
-    
+
             if (isNumeUpdated || isFunctieUpdated) {
                 const angajat = db.prepare('SELECT img, nume, functie FROM angajati WHERE id=?').get(angajatId);
-    
+
                 if (angajat) {
                     const basePath = path.join(__dirname, '../database/img/');
                     const relativeImagePath = path.basename(angajat.img);
                     const imagePath = path.join(basePath, relativeImagePath);
-                    
+
                     if (fs.existsSync(imagePath)) {
                         const nume = (isNumeUpdated ? updatedFields.nume : angajat.nume || '').toUpperCase();
                         const functie = (isFunctieUpdated ? updatedFields.functie : angajat.functie || '').toUpperCase();
-                        
+
                         const newImageName = `${nume}_${functie}.jpg`;
                         const newImagePath = path.join(basePath, newImageName);
 
@@ -143,12 +111,12 @@ exports.editAngajati = (req, res) => {
                     console.error({ error: error.message });
                 }
             }
-    
+
             res.json({ message: `Campurile au fost actualizate pentru ID ${angajatId}` });
         } else {
             res.status(400).json({ success: false, error: error.message });
         }
-    
+
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }

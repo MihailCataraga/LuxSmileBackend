@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken'); 
 const secret = 'secret';
 
+
 exports.verifyToken = (req, res, next) => {
     const jwToken = req.body.jwToken;
     if(!jwToken) {
