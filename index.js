@@ -15,6 +15,7 @@ app.use('/src/database/img', express.static(__dirname + '/src/database/img'));
 
 const authController = require('./src/controllers/authController');
 const angajatiController = require('./src/controllers/angajatiController');
+const mesajController = require('./src/controllers/mesajController');
 const authMiddleware = require('./src/middleware/authMiddleware');
 const { upload } = require('./src/middleware/multerMiddleware')
 
@@ -32,11 +33,14 @@ app.delete('/angajati/delete/:id', authMiddleware.verifyToken, angajatiControlle
 
 app.get('/src/database/img/:img', authMiddleware.verifyToken, angajatiController.serveImage);
 
+//Adauga mesaj 
+app.post('/adaugaMesaj', mesajController.addMesaj);
+
 //Arata mesajele
-app.post('/mesaje', authMiddleware.verifyToken, angajatiController.fetchMessages);
+app.post('/mesaje', authMiddleware.verifyToken, mesajController.fetchMessages);
 
 //Read status
-app.post('/mesaje/:id', authMiddleware.verifyToken, angajatiController.markAsRead);
+app.post('/mesaje/:id', authMiddleware.verifyToken, mesajController.markAsRead);
 
 // Img
 app.post('/upload', upload.single('img'), angajatiController.addImg);
