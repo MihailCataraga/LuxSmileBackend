@@ -28,12 +28,12 @@ app.post('/angajatNou', authMiddleware.verifyToken, angajatiController.addAngaja
 
 app.put('/angajati/edit/:id', authMiddleware.verifyToken, angajatiController.editAngajati);
 
-app.delete('/delete/:id', authMiddleware.verifyToken, angajatiController.deleteAngajati);
+app.delete('/angajati/delete/:id', authMiddleware.verifyToken, angajatiController.deleteAngajati);
 
 app.get('/src/database/img/:img', authMiddleware.verifyToken, angajatiController.serveImage);
 
 //Arata mesajele
-app.get('/mesaje', authMiddleware.verifyToken, angajatiController.fetchMessages);
+app.post('/mesaje', authMiddleware.verifyToken, angajatiController.fetchMessages);
 
 //Read status
 app.post('/mesaje/:id', authMiddleware.verifyToken, angajatiController.markAsRead);

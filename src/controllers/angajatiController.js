@@ -174,7 +174,7 @@ exports.fetchMessages = (req, res) => {
 exports.markAsRead = (req, res) => {
     try {
         const messageId = req.params.id;
-        const updateQuery = 'UPDATE mesaje_primite SET read_status = 1 WHERE id=?';
+        const updateQuery = 'UPDATE mesaje_primite SET read_status = 0 WHERE id=?';
         const updateStatement = db.prepare(updateQuery);
         updateStatement.run(messageId);
         res.json({ success: true, message: 'Message marked as read successfully.' });
