@@ -19,11 +19,12 @@ const mesajController = require('./src/controllers/mesajController');
 const authMiddleware = require('./src/middleware/authMiddleware');
 const { upload } = require('./src/middleware/multerMiddleware')
 
+
 app.post('/angajati/:functie', authMiddleware.verifyToken, angajatiController.angajatDupaFunctie);
 
 app.post('/login', authController.login);
 
-app.post('/angajati', authMiddleware.verifyToken, angajatiController.totiAngajatii);
+app.post('/angajati', angajatiController.totiAngajatii);
 
 app.post('/angajatNou', authMiddleware.verifyToken, angajatiController.addAngajati);
 
@@ -34,7 +35,7 @@ app.delete('/angajati/delete/:id', authMiddleware.verifyToken, angajatiControlle
 app.get('/src/database/img/:img', authMiddleware.verifyToken, angajatiController.serveImage);
 
 //Adauga mesaj 
-app.post('/adaugaMesaj', mesajController.addMesaj);
+app.post('/adaugaMesaj', mesajController.adaugaMesaj);
 
 //Arata mesajele
 app.post('/mesaje', authMiddleware.verifyToken, mesajController.fetchMessages);
