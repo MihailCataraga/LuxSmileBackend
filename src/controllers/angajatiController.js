@@ -54,12 +54,12 @@ exports.addImg = (req, res) => {
 //Adauga angajati
 exports.addAngajati = (req, res) => {
     try {
-        const { nume, specialitate, functie, numeRu, specialitateRu} = req.body;
+        const { nume, specialitate, functie, numeRu, specialitateRu } = req.body;
 
         if (!nume || !specialitate || !functie || !numeRu || !specialitateRu) {
             return res.status(400).json({ success: false, message: 'Toate campurile sunt obligatorii' });
         }
-        const imgPath = nume.toUpperCase() + '_' + functie + '.jpg';
+        const imgPath = specialitate + ' ' + nume + '_' + functie + '.jpg';
 
         const query = 'INSERT INTO angajati (nume, numeRu, specialitate, specialitateRu, img, functie) VALUES (?, ?, ?, ?, ?, ?)';
         const statement = db.prepare(query);
@@ -87,36 +87,32 @@ exports.editAngajati = (req, res) => {
         const isFunctieUpdated = updatedFields.hasOwnProperty('functie');
         const isNumeRuUpdated = updatedFields.hasOwnProperty('numeRu');
         const isSpecialitateRuUpdated = updatedFields.hasOwnProperty('specialitateRu');
+        const isImgUpdated = updatedFields.hasOwnProperty('img');
 
-        if (isNumeUpdated || isFunctieUpdated || isSpecialitateUpdated || isNumeRuUpdated || isSpecialitateRuUpdated) {
+        const angajat = db.prepare('SELECT img FROM angajati WHERE id=?').get(angajatId);
+
+        if (angajat) {
+            const basePath = path.join(__dirname, '../database/img/');
+            const relativeImagePath = path.basename(angajat.img);
+            const imagePath = path.join(basePath, relativeImagePath);
+
+            if (fs.existsSync(imagePath)) {
+                const newImageName = updatedFields.img;
+                const newImagePath = path.join(basePath, newImageName);
+
+                fs.renameSync(imagePath, newImagePath);
+                db.prepare('UPDATE angajati SET img=? WHERE id=?').run(newImageName, angajatId);
+            } else {
+                console.error('Imaginea nu exista', imagePath);
+            }
+        } else {
+            console.error('Angajatul nu exista');
+        }
+
+        if (isNumeUpdated || isFunctieUpdated || isSpecialitateUpdated || isNumeRuUpdated || isSpecialitateRuUpdated || isImgUpdated) {
             const setClause = Object.keys(updatedFields).map(field => `${field} = :${field}`).join(', ');
             const query = `UPDATE angajati SET ${setClause} WHERE id = :id`;
             const result = db.prepare(query).run({ ...updatedFields, id: angajatId });
-
-            if (result.changes > 0) {
-                const angajat = db.prepare('SELECT img, nume, functie FROM angajati WHERE id=?').get(angajatId);
-
-                if (angajat) {
-                    const basePath = path.join(__dirname, '../database/img/');
-                    const relativeImagePath = path.basename(angajat.img);
-                    const imagePath = path.join(basePath, relativeImagePath);
-
-                    if (fs.existsSync(imagePath)) {
-                        const nume = (isNumeUpdated ? updatedFields.nume : angajat.nume || '').toUpperCase();
-                        const functie = (isFunctieUpdated ? updatedFields.functie : angajat.functie || '').toUpperCase();
-
-                        const newImageName = `${nume}_${functie}.jpg`;
-                        const newImagePath = path.join(basePath, newImageName);
-
-                        fs.renameSync(imagePath, newImagePath);
-                        db.prepare('UPDATE angajati SET img=? WHERE id=?').run(newImageName, angajatId);
-                    } else {
-                        console.error('Imaginea nu exista', imagePath);
-                    }
-                } else {
-                    console.error('Angajatul nu exista');
-                }
-            }
 
             res.json({ message: `Campurile au fost actualizate pentru ID ${angajatId}` });
         } else {
@@ -165,3 +161,27 @@ exports.deleteAngajati = (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
+exports.deleteImg = (req, res) => {
+    const id = req.params.id;
+    try {
+        const selectStmt = db.prepare('SELECT img FROM angajati WHERE id=?');
+        const selectedEmployee = selectStmt.get(id);
+
+        if (!selectedEmployee) {
+            return res.status(404).json({ error: 'Angajatul nu a fost gasit' });
+        }
+
+        const imgPath = path.join(__dirname, '..', 'database', 'img', selectedEmployee.img);
+        try {
+            fs.unlinkSync(imgPath);
+        } catch (unlinkError) {
+            console.error(`Eroare la ștergerea fișierului imagine: ${unlinkError.message}`);
+            return res.status(500).json({ error: unlinkError.message });
+        }
+        res.status(200).json({ message: 'Imaginea a fost ștearsă' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: error.message });
+    }
+}

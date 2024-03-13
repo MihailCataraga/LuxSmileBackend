@@ -24,7 +24,7 @@ app.post('/angajati/:functie', authMiddleware.verifyToken, angajatiController.an
 
 app.post('/login', authController.login);
 
-app.post('/angajati', angajatiController.totiAngajatii);
+app.get('/angajati', angajatiController.totiAngajatii);
 
 app.post('/angajatNou', authMiddleware.verifyToken, angajatiController.addAngajati);
 
@@ -32,7 +32,7 @@ app.put('/angajati/edit/:id', authMiddleware.verifyToken, angajatiController.edi
 
 app.delete('/angajati/delete/:id', authMiddleware.verifyToken, angajatiController.deleteAngajati);
 
-app.get('/src/database/img/:img', authMiddleware.verifyToken, angajatiController.serveImage);
+app.get('/src/database/img/:img', angajatiController.serveImage);
 
 //Adauga mesaj 
 app.post('/adaugaMesaj', mesajController.adaugaMesaj);
@@ -45,6 +45,9 @@ app.post('/mesaje/:id', authMiddleware.verifyToken, mesajController.markAsRead);
 
 // Img
 app.post('/upload', upload.single('img'), angajatiController.addImg);
+
+// Delete Img
+app.delete('/img/:id', authMiddleware.verifyToken, angajatiController.deleteImg)
 
 
 
