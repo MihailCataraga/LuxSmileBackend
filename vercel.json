@@ -1,8 +1,7 @@
 {
     "functions": {
         "api": {
-            "runtime": "node@14",
-            "handler": "server.js"
+            "runtime": "node@14"
         }
     },
     "routes": [
