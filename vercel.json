@@ -1,13 +1,13 @@
 {
     "functions": {
         "api": {
-            "runtime": "nodejs14.x",
-            "memory": 512
+            "runtime": "node@14",
+            "handler": "server.js"
         }
     },
     "routes": [
         {
-            "src": "/api/(.*)",
+            "src": "/(.*)",
             "dest": "/api/$1"
         }
     ]
