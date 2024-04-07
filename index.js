@@ -49,6 +49,11 @@ app.post('/upload', upload.single('img'), angajatiController.addImg);
 // Delete Img
 app.delete('/img/:id', authMiddleware.verifyToken, angajatiController.deleteImg)
 
+// Vercel
+app.get('/', (req, res) => {
+  res.send('Hello World')
+})
+
 
 
 const PORT = 8080;
