@@ -1,7 +1,7 @@
 {
     "functions": {
         "api": {
-            "runtime": "node@14"
+            "runtime": "node"
         }
     },
     "routes": [
