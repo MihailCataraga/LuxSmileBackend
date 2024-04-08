@@ -50,9 +50,7 @@ app.post('/upload', upload.single('img'), angajatiController.addImg);
 app.delete('/img/:id', authMiddleware.verifyToken, angajatiController.deleteImg)
 
 
-
-
-const PORT = 443;
+const PORT = 8080;
 app.listen(PORT, () => {
   console.log(`App run on port: ${PORT}`)
 });
